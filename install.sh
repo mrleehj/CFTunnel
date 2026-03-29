@@ -114,8 +114,8 @@ test_download_url() {
     local url=$1
     local timeout=5
     
-    # 使用 curl 测试 HEAD 请求
-    if timeout $timeout curl -fsSL -I "$url" &>/dev/null; then
+    # 使用 curl 测试 HEAD 请求，跟随重定向
+    if timeout $timeout curl -fsSL -I -L "$url" &>/dev/null; then
         return 0
     else
         return 1
