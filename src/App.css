@@ -1,0 +1,133 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* 苹果系统浅色主题 */
+    --background: 0 0% 98%;
+    --foreground: 0 0% 20%;
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 20%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 20%;
+    --primary: 211 100% 50%;  /* 苹果蓝色 #007AFF */
+    --primary-foreground: 0 0% 100%;
+    --secondary: 0 0% 96%;
+    --secondary-foreground: 0 0% 20%;
+    --muted: 0 0% 96%;
+    --muted-foreground: 0 0% 45%;
+    --accent: 211 100% 50%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 0 84% 60%;  /* 苹果红色 */
+    --destructive-foreground: 0 0% 100%;
+    --border: 0 0% 90%;
+    --input: 0 0% 90%;
+    --ring: 211 100% 50%;
+    --radius: 0.75rem;  /* 苹果风格的圆角 */
+  }
+}
+
+@layer base {
+  * {
+    border-color: hsl(var(--border));
+  }
+  body {
+    background-color: hsl(var(--background));
+    color: hsl(var(--foreground));
+    margin: 0;
+    padding: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+}
+
+/* 应用布局样式 */
+.app-container {
+  display: flex;
+  height: 100vh;
+}
+
+.app-sidebar {
+  width: 200px;
+  background: hsl(var(--card));
+  border-right: 1px solid hsl(var(--border));
+  display: flex;
+  flex-direction: column;
+  padding: 20px 0;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+.app-logo {
+  font-size: 20px;
+  font-weight: bold;
+  text-align: center;
+  padding: 10px 0 30px;
+  color: hsl(var(--primary));
+}
+
+.app-nav {
+  display: flex;
+  flex-direction: column;
+}
+
+.app-nav button {
+  background: none;
+  border: none;
+  color: hsl(var(--muted-foreground));
+  padding: 10px 20px;
+  text-align: left;
+  cursor: pointer;
+  font-size: 14px;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border-radius: 8px;
+  margin: 2px 12px;
+  font-weight: 500;
+}
+
+.app-nav button .nav-icon {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+}
+
+.app-nav button:hover {
+  background: hsl(var(--muted));
+  color: hsl(var(--foreground));
+}
+
+.app-nav button.active {
+  background: hsl(var(--primary));
+  color: hsl(var(--primary-foreground));
+  box-shadow: 0 2px 8px hsla(var(--primary), 0.3);
+}
+
+.app-main {
+  flex: 1;
+  overflow-y: auto;
+  background: hsl(var(--background));
+}
+
+/* 关于页面样式 */
+.about-page {
+  padding: 40px;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.about-page h1 {
+  font-size: 28px;
+  margin-bottom: 20px;
+}
+
+.about-page p {
+  font-size: 16px;
+  line-height: 1.8;
+  margin: 12px 0;
+  color: hsl(var(--muted-foreground));
+}
