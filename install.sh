@@ -30,6 +30,21 @@ PORT=3000
 GITHUB_REPO="https://github.com/mrleehj/CFTunnel.git"
 GITHUB_BRANCH="main"
 
+# GitHub 加速镜像（国内）
+GITHUB_MIRRORS=(
+    "https://github.com/mrleehj/CFTunnel.git"           # 官方源
+    "https://kkgithub.com/mrleehj/CFTunnel.git"         # KKGitHub 镜像
+    "https://gitclone.com/github.com/mrleehj/CFTunnel.git"  # GitClone 镜像
+    "https://hub.bgithub.xyz/mrleehj/CFTunnel.git"      # BGitHub 镜像
+)
+
+# Gitee 镜像配置（国内用户推荐）
+GITEE_REPO="https://gitee.com/mrleehj/CFTunnel.git"
+GITEE_BRANCH="main"
+
+# 自动选择源（优先使用 Gitee）
+USE_GITEE=${USE_GITEE:-auto}
+
 # 打印带颜色的消息
 print_info() {
     echo -e "${BLUE}[INFO]${NC} $1"
@@ -89,7 +104,20 @@ install_git() {
     fi
 }
 
-# 检查项目文件并从 GitHub 克隆（如果需要）
+# 测试镜像源连接速度
+test_mirror_speed() {
+    local mirror=$1
+    local timeout=5
+    
+    # 使用 git ls-remote 测试连接
+    if timeout $timeout git ls-remote "$mirror" &>/dev/null; then
+        return 0
+    else
+        return 1
+    fi
+}
+
+# 检查项目文件并从 GitHub/Gitee 克隆（如果需要）
 check_and_clone_project() {
     SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
     
@@ -100,22 +128,93 @@ check_and_clone_project() {
         return 0
     fi
     
-    # 如果不在项目目录，从 GitHub 克隆
-    print_info "未检测到项目文件，从 GitHub 克隆..."
+    # 如果不在项目目录，从 GitHub/Gitee 克隆
+    print_info "未检测到项目文件，准备克隆项目..."
     
     install_git
     
     TEMP_DIR=$(mktemp -d)
     cd "$TEMP_DIR"
     
-    print_info "克隆仓库: $GITHUB_REPO"
-    git clone --depth 1 -b "$GITHUB_BRANCH" "$GITHUB_REPO" cf-tunnel-manager
+    # 选择克隆源
+    CLONE_REPO=""
+    CLONE_BRANCH=""
+    
+    if [ "$USE_GITEE" = "yes" ]; then
+        # 强制使用 Gitee
+        CLONE_REPO="$GITEE_REPO"
+        CLONE_BRANCH="$GITEE_BRANCH"
+        print_info "使用 Gitee 镜像源"
+    elif [ "$USE_GITEE" = "no" ]; then
+        # 强制使用 GitHub（智能选择最快镜像）
+        print_info "测试 GitHub 镜像源连接速度..."
+        
+        for mirror in "${GITHUB_MIRRORS[@]}"; do
+            print_info "测试: $mirror"
+            if test_mirror_speed "$mirror"; then
+                CLONE_REPO="$mirror"
+                CLONE_BRANCH="$GITHUB_BRANCH"
+                print_success "选择镜像: $mirror"
+                break
+            else
+                print_warning "镜像不可用: $mirror"
+            fi
+        done
+        
+        if [ -z "$CLONE_REPO" ]; then
+            print_error "所有 GitHub 镜像源均不可用"
+            print_info "建议尝试: USE_GITEE=yes bash install.sh"
+            rm -rf "$TEMP_DIR"
+            exit 1
+        fi
+    else
+        # 自动选择：优先 Gitee，失败则尝试 GitHub 镜像
+        print_info "自动选择克隆源..."
+        
+        # 测试 Gitee 连接
+        print_info "测试 Gitee 连接..."
+        if test_mirror_speed "$GITEE_REPO"; then
+            CLONE_REPO="$GITEE_REPO"
+            CLONE_BRANCH="$GITEE_BRANCH"
+            print_success "使用 Gitee 镜像源（国内推荐）"
+        else
+            print_warning "Gitee 不可用，尝试 GitHub 镜像..."
+            
+            # 测试所有 GitHub 镜像
+            for mirror in "${GITHUB_MIRRORS[@]}"; do
+                print_info "测试: $mirror"
+                if test_mirror_speed "$mirror"; then
+                    CLONE_REPO="$mirror"
+                    CLONE_BRANCH="$GITHUB_BRANCH"
+                    print_success "选择镜像: $mirror"
+                    break
+                else
+                    print_warning "镜像不可用: $mirror"
+                fi
+            done
+            
+            if [ -z "$CLONE_REPO" ]; then
+                print_error "所有镜像源均不可用，请检查网络连接"
+                print_info "或手动克隆后再运行安装脚本:"
+                print_info "  git clone https://github.com/mrleehj/CFTunnel.git"
+                print_info "  cd CFTunnel"
+                print_info "  sudo bash install.sh"
+                rm -rf "$TEMP_DIR"
+                exit 1
+            fi
+        fi
+    fi
+    
+    print_info "克隆仓库: $CLONE_REPO"
+    git clone --depth 1 -b "$CLONE_BRANCH" "$CLONE_REPO" cf-tunnel-manager
     
     if [ $? -ne 0 ]; then
         print_error "克隆失败，请检查:"
         print_info "1. 网络连接是否正常"
-        print_info "2. GitHub 仓库地址是否正确"
-        print_info "3. 或者手动克隆后再运行安装脚本"
+        print_info "2. 仓库地址是否正确"
+        print_info "3. 尝试其他安装方式:"
+        print_info "   - 使用 Gitee: USE_GITEE=yes bash install.sh"
+        print_info "   - 手动克隆后安装"
         rm -rf "$TEMP_DIR"
         exit 1
     fi

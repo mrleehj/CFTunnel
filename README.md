@@ -81,7 +81,7 @@ cf-linux/
 
 ## 快速开始
 
-### 方式 1：从 GitHub 一键安装（推荐）
+### 方式 1：从 GitHub 一键安装（国外服务器推荐）
 
 直接从 GitHub 安装，无需手动克隆：
 
@@ -93,14 +93,53 @@ curl -fsSL https://raw.githubusercontent.com/mrleehj/CFTunnel/main/install.sh | 
 wget -qO- https://raw.githubusercontent.com/mrleehj/CFTunnel/main/install.sh | sudo bash
 ```
 
+### 方式 1.5：从 Gitee 一键安装（国内服务器推荐）⭐
+
+如果服务器在国内，推荐使用 Gitee 镜像：
+
+```bash
+# 使用 curl（强制使用 Gitee）
+curl -fsSL https://gitee.com/mrleehj/CFTunnel/raw/main/install.sh | sudo USE_GITEE=yes bash
+
+# 或使用 wget
+wget -qO- https://gitee.com/mrleehj/CFTunnel/raw/main/install.sh | sudo USE_GITEE=yes bash
+
+# 自动选择源（脚本会自动检测并选择最快的源）
+curl -fsSL https://gitee.com/mrleehj/CFTunnel/raw/main/install.sh | sudo bash
+```
+
+### 方式 1.6：使用 GitHub 加速镜像（国内服务器备选）
+
+如果 Gitee 不可用，脚本会自动尝试以下 GitHub 加速镜像：
+
+- **官方源**: https://github.com/mrleehj/CFTunnel.git
+- **KKGitHub**: https://kkgithub.com/mrleehj/CFTunnel.git
+- **GitClone**: https://gitclone.com/github.com/mrleehj/CFTunnel.git
+- **BGitHub**: https://hub.bgithub.xyz/mrleehj/CFTunnel.git
+
+脚本会自动测试所有镜像源并选择最快的一个。你也可以强制使用 GitHub 镜像：
+
+```bash
+# 强制使用 GitHub 镜像（自动选择最快的）
+curl -fsSL https://raw.githubusercontent.com/mrleehj/CFTunnel/main/install.sh | sudo USE_GITEE=no bash
+```
+
+**智能源选择说明**:
+- 默认（auto）: 优先 Gitee → GitHub 镜像（按顺序测试）
+- `USE_GITEE=yes`: 强制使用 Gitee
+- `USE_GITEE=no`: 强制使用 GitHub 镜像（自动选择最快的）
+
 ### 方式 2：克隆后安装
 
 ```bash
-# 克隆仓库
+# 从 GitHub 克隆
 git clone https://github.com/mrleehj/CFTunnel.git
 cd CFTunnel
+sudo bash install.sh
 
-# 运行安装脚本
+# 或从 Gitee 克隆（国内推荐）
+git clone https://gitee.com/mrleehj/CFTunnel.git
+cd CFTunnel
 sudo bash install.sh
 ```
 
