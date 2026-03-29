@@ -43,13 +43,6 @@ GITEE_REPO_OWNER="mrleehj"
 GITEE_REPO_NAME="CFTunnel"
 GITEE_RELEASE_URL="https://gitee.com/${GITEE_REPO_OWNER}/${GITEE_REPO_NAME}/releases/download"
 
-# 安装包文件名（根据版本号动态生成）
-if [ "$RELEASE_VERSION" = "latest" ]; then
-    PACKAGE_NAME="cf-tunnel-manager-v1.0.0.tar.gz"
-else
-    PACKAGE_NAME="cf-tunnel-manager-${RELEASE_VERSION}.tar.gz"
-fi
-
 # 自动选择源（优先使用 Gitee）
 USE_GITEE=${USE_GITEE:-auto}
 
@@ -125,6 +118,9 @@ download_package() {
             print_warning "无法获取最新版本，使用默认版本: $RELEASE_VERSION"
         fi
     fi
+    
+    # 根据版本号生成文件名
+    PACKAGE_NAME="cf-tunnel-manager-${RELEASE_VERSION}.tar.gz"
     
     TEMP_DIR=$(mktemp -d)
     cd "$TEMP_DIR"
