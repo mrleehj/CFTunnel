@@ -81,9 +81,9 @@ cf-linux/
 
 ## 快速开始
 
-### 方式 1：从 GitHub 一键安装（国外服务器推荐）
+### 方式 1：一键安装（推荐）⭐
 
-直接从 GitHub 安装，无需手动克隆：
+从 GitHub Release 下载完整安装包并自动安装:
 
 ```bash
 # 使用 curl
@@ -93,75 +93,76 @@ curl -fsSL https://raw.githubusercontent.com/mrleehj/CFTunnel/main/install.sh | 
 wget -qO- https://raw.githubusercontent.com/mrleehj/CFTunnel/main/install.sh | sudo bash
 ```
 
-### 方式 1.5：从 Gitee 一键安装（国内服务器推荐）⭐
+**说明**: 
+- 脚本会自动从 GitHub Release 下载完整安装包（包含已构建的前端文件）
+- 无需手动构建,开箱即用
+- 支持自动选择最快的下载源
 
-如果服务器在国内，推荐使用 Gitee 镜像：
+### 方式 2：一键安装（国内服务器）⭐
+
+如果服务器在国内,推荐使用 Gitee 镜像:
 
 ```bash
-# 使用 curl（强制使用 Gitee）
+# 使用 Gitee（推荐）
+curl -fsSL https://gitee.com/mrleehj/CFTunnel/raw/main/install.sh | sudo bash
+
+# 强制使用 Gitee Release
 curl -fsSL https://gitee.com/mrleehj/CFTunnel/raw/main/install.sh | sudo USE_GITEE=yes bash
 
-# 或使用 wget
-wget -qO- https://gitee.com/mrleehj/CFTunnel/raw/main/install.sh | sudo USE_GITEE=yes bash
-
-# 自动选择源（脚本会自动检测并选择最快的源）
-curl -fsSL https://gitee.com/mrleehj/CFTunnel/raw/main/install.sh | sudo bash
-```
-
-### 方式 1.6：使用 GitHub 加速镜像（国内服务器备选）
-
-如果 Gitee 不可用，脚本会自动尝试以下 GitHub 加速镜像：
-
-- **官方源**: https://github.com/mrleehj/CFTunnel.git
-- **KKGitHub**: https://kkgithub.com/mrleehj/CFTunnel.git
-- **GitClone**: https://gitclone.com/github.com/mrleehj/CFTunnel.git
-- **BGitHub**: https://hub.bgithub.xyz/mrleehj/CFTunnel.git
-
-脚本会自动测试所有镜像源并选择最快的一个。你也可以强制使用 GitHub 镜像：
-
-```bash
-# 强制使用 GitHub 镜像（自动选择最快的）
+# 强制使用 GitHub Release（自动选择最快镜像）
 curl -fsSL https://raw.githubusercontent.com/mrleehj/CFTunnel/main/install.sh | sudo USE_GITEE=no bash
 ```
 
-**智能源选择说明**:
-- 默认（auto）: 优先 Gitee → GitHub 镜像（按顺序测试）
-- `USE_GITEE=yes`: 强制使用 Gitee
-- `USE_GITEE=no`: 强制使用 GitHub 镜像（自动选择最快的）
+**智能源选择**:
+- 默认（auto）: 优先 Gitee Release → GitHub Release 镜像
+- `USE_GITEE=yes`: 强制使用 Gitee Release
+- `USE_GITEE=no`: 强制使用 GitHub Release 镜像
 
-### 方式 2：克隆后安装
+### 方式 3：指定版本安装
 
 ```bash
-# 从 GitHub 克隆
+# 安装指定版本
+curl -fsSL https://raw.githubusercontent.com/mrleehj/CFTunnel/main/install.sh | sudo RELEASE_VERSION=v1.0.0 bash
+
+# 安装最新版本（默认）
+curl -fsSL https://raw.githubusercontent.com/mrleehj/CFTunnel/main/install.sh | sudo RELEASE_VERSION=latest bash
+```
+
+### 方式 4：手动下载安装包
+
+1. 从 Release 页面下载安装包:
+   - GitHub: https://github.com/mrleehj/CFTunnel/releases
+   - Gitee: https://gitee.com/mrleehj/CFTunnel/releases
+
+2. 上传到服务器并解压:
+```bash
+# 解压安装包
+tar -xzf cf-tunnel-manager.tar.gz
+cd cf-tunnel-manager
+
+# 运行安装脚本
+sudo bash install.sh
+```
+
+### 方式 5：开发者模式（从源码安装）
+
+仅适用于开发环境,需要手动构建:
+
+```bash
+# 克隆仓库
 git clone https://github.com/mrleehj/CFTunnel.git
-cd CFTunnel
-sudo bash install.sh
+# 或使用 Gitee: git clone https://gitee.com/mrleehj/CFTunnel.git
 
-# 或从 Gitee 克隆（国内推荐）
-git clone https://gitee.com/mrleehj/CFTunnel.git
-cd CFTunnel
-sudo bash install.sh
-```
+cd CFTunnel/cf-linux
 
-### 方式 3：手动安装（开发环境）
-
-#### 1. 安装依赖
-
-```bash
-cd cf-linux
+# 安装依赖
 npm install
-```
 
-#### 2. 构建前端
-
-```bash
+# 构建前端
 npm run build
-```
 
-#### 3. 启动服务
-
-```bash
-npm start
+# 运行安装脚本
+sudo bash install.sh
 ```
 
 ### 3. 首次登录

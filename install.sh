@@ -26,21 +26,25 @@ INSTALL_DIR="/opt/cf-tunnel-manager"
 SERVICE_NAME="cf-tunnel-manager"
 PORT=3000
 
-# GitHub 配置（如果需要从 GitHub 克隆）
-GITHUB_REPO="https://github.com/mrleehj/CFTunnel.git"
-GITHUB_BRANCH="main"
+# GitHub Release 配置
+GITHUB_REPO_OWNER="mrleehj"
+GITHUB_REPO_NAME="CFTunnel"
+RELEASE_VERSION=${RELEASE_VERSION:-latest}  # 可以指定版本,默认使用最新版
 
-# GitHub 加速镜像（国内）
-GITHUB_MIRRORS=(
-    "https://github.com/mrleehj/CFTunnel.git"           # 官方源
-    "https://kkgithub.com/mrleehj/CFTunnel.git"         # KKGitHub 镜像
-    "https://gitclone.com/github.com/mrleehj/CFTunnel.git"  # GitClone 镜像
-    "https://hub.bgithub.xyz/mrleehj/CFTunnel.git"      # BGitHub 镜像
+# GitHub Release 下载地址（多个镜像）
+GITHUB_RELEASE_MIRRORS=(
+    "https://github.com/${GITHUB_REPO_OWNER}/${GITHUB_REPO_NAME}/releases/download"
+    "https://kkgithub.com/${GITHUB_REPO_OWNER}/${GITHUB_REPO_NAME}/releases/download"
+    "https://hub.bgithub.xyz/${GITHUB_REPO_OWNER}/${GITHUB_REPO_NAME}/releases/download"
 )
 
-# Gitee 镜像配置（国内用户推荐）
-GITEE_REPO="https://gitee.com/mrleehj/CFTunnel.git"
-GITEE_BRANCH="main"
+# Gitee Release 配置（国内镜像）
+GITEE_REPO_OWNER="mrleehj"
+GITEE_REPO_NAME="CFTunnel"
+GITEE_RELEASE_URL="https://gitee.com/${GITEE_REPO_OWNER}/${GITEE_REPO_NAME}/releases/download"
+
+# 安装包文件名
+PACKAGE_NAME="cf-tunnel-manager.tar.gz"
 
 # 自动选择源（优先使用 Gitee）
 USE_GITEE=${USE_GITEE:-auto}
@@ -318,24 +322,31 @@ copy_files() {
 
 # 安装依赖
 install_dependencies() {
-    print_info "安装后端运行依赖..."
+    print_info "安装项目依赖..."
     
     cd "$INSTALL_DIR"
     
-    # 只安装生产环境依赖（后端运行需要的）
-    # 不需要安装 vite、react 等前端开发依赖
-    npm install --omit=dev
+    # 检查是否已有 dist 目录
+    if [ -d "$INSTALL_DIR/dist" ]; then
+        # 已有构建文件,只安装生产依赖
+        print_info "检测到已构建文件,仅安装生产依赖..."
+        npm install --omit=dev
+    else
+        # 需要构建,安装所有依赖
+        print_info "需要构建前端,安装所有依赖..."
+        npm install
+    fi
     
     print_success "依赖安装完成"
 }
 
-# 构建前端（已在本地完成，服务器上不需要构建）
-build_frontend() {
+# 检查前端构建文件
+check_frontend() {
     print_info "检查前端构建文件..."
     
     if [ ! -d "$INSTALL_DIR/dist" ]; then
         print_error "未找到前端构建文件 (dist 目录)"
-        print_info "请确保在本地已经运行 'npm run build' 并打包了 dist 目录"
+        print_info "安装包可能不完整,请重新下载"
         exit 1
     fi
     
@@ -496,12 +507,12 @@ main() {
     
     check_root
     detect_os
-    check_and_clone_project
+    check_or_download_package
     install_nodejs
     create_install_dir
     copy_files
     install_dependencies
-    build_frontend
+    check_frontend
     create_cftm_command
     create_systemd_service
     configure_firewall
