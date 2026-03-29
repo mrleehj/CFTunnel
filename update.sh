@@ -1,17 +1,17 @@
 #!/bin/bash
 
-# Cloudflare Tunnel Manager - 更新脚本
+# Cloudflare Tunnel Manager - 鏇存柊鑴氭湰
 
 set -e
 
-# 颜色定义
+# 棰滆壊瀹氫箟
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
 NC='\033[0m'
 
-# 配置
+# 閰嶇疆
 INSTALL_DIR="/opt/cf-tunnel-manager"
 SERVICE_NAME="cf-tunnel-manager"
 
@@ -31,98 +31,95 @@ print_error() {
     echo -e "${RED}[ERROR]${NC} $1"
 }
 
-# 检查是否为 root 用户
+# 妫€鏌ユ槸鍚︿负 root 鐢ㄦ埛
 check_root() {
     if [ "$EUID" -ne 0 ]; then 
-        print_error "请使用 root 权限运行此脚本"
-        echo "使用方法: sudo bash update.sh"
+        print_error "璇蜂娇鐢?root 鏉冮檺杩愯姝よ剼鏈?
+        echo "浣跨敤鏂规硶: sudo bash update.sh"
         exit 1
     fi
 }
 
-# 检查安装
-check_installation() {
+# 妫€鏌ュ畨瑁?check_installation() {
     if [ ! -d "$INSTALL_DIR" ]; then
-        print_error "未检测到安装，请先运行 install.sh"
+        print_error "鏈娴嬪埌瀹夎锛岃鍏堣繍琛?install.sh"
         exit 1
     fi
 }
 
-# 停止服务
+# 鍋滄鏈嶅姟
 stop_service() {
-    print_info "停止服务..."
+    print_info "鍋滄鏈嶅姟..."
     
     if systemctl is-active --quiet ${SERVICE_NAME}; then
         systemctl stop ${SERVICE_NAME}
-        print_success "服务已停止"
+        print_success "鏈嶅姟宸插仠姝?
     fi
 }
 
-# 备份当前版本
+# 澶囦唤褰撳墠鐗堟湰
 backup_current() {
-    print_info "备份当前版本..."
+    print_info "澶囦唤褰撳墠鐗堟湰..."
     
     BACKUP_DIR="${INSTALL_DIR}_backup_$(date +%Y%m%d_%H%M%S)"
     cp -r "$INSTALL_DIR" "$BACKUP_DIR"
     
-    print_success "已备份到: $BACKUP_DIR"
+    print_success "宸插浠藉埌: $BACKUP_DIR"
 }
 
-# 更新文件
+# 鏇存柊鏂囦欢
 update_files() {
-    print_info "更新应用文件..."
+    print_info "鏇存柊搴旂敤鏂囦欢..."
     
     SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
     
-    # 复制新文件（保留 node_modules）
-    rsync -av --exclude='node_modules' --exclude='.git' --exclude='dist' \
+    # 澶嶅埗鏂版枃浠讹紙淇濈暀 node_modules锛?    rsync -av --exclude='node_modules' --exclude='.git' --exclude='dist' \
         "$SCRIPT_DIR/" "$INSTALL_DIR/"
     
-    print_success "文件更新完成"
+    print_success "鏂囦欢鏇存柊瀹屾垚"
 }
 
-# 更新依赖
+# 鏇存柊渚濊禆
 update_dependencies() {
-    print_info "更新项目依赖..."
+    print_info "鏇存柊椤圭洰渚濊禆..."
     
     cd "$INSTALL_DIR"
     npm install --production
     
-    print_success "依赖更新完成"
+    print_success "渚濊禆鏇存柊瀹屾垚"
 }
 
-# 重新构建前端
+# 閲嶆柊鏋勫缓鍓嶇
 rebuild_frontend() {
-    print_info "重新构建前端..."
+    print_info "閲嶆柊鏋勫缓鍓嶇..."
     
     cd "$INSTALL_DIR"
     npm run build
     
-    print_success "前端构建完成"
+    print_success "鍓嶇鏋勫缓瀹屾垚"
 }
 
-# 启动服务
+# 鍚姩鏈嶅姟
 start_service() {
-    print_info "启动服务..."
+    print_info "鍚姩鏈嶅姟..."
     
     systemctl start ${SERVICE_NAME}
     
     sleep 2
     
     if systemctl is-active --quiet ${SERVICE_NAME}; then
-        print_success "服务启动成功"
+        print_success "鏈嶅姟鍚姩鎴愬姛"
     else
-        print_error "服务启动失败"
-        print_info "查看日志: journalctl -u ${SERVICE_NAME} -f"
+        print_error "鏈嶅姟鍚姩澶辫触"
+        print_info "鏌ョ湅鏃ュ織: journalctl -u ${SERVICE_NAME} -f"
         exit 1
     fi
 }
 
-# 主函数
-main() {
+# 涓诲嚱鏁?main() {
     echo ""
     echo "=========================================="
-    echo "  Cloudflare Tunnel Manager - 更新程序"
+    echo "  Cloudflare Tunnel Manager - 鏇存柊绋嬪簭"
     echo "=========================================="
     echo ""
     
@@ -137,11 +134,11 @@ main() {
     
     echo ""
     echo "=========================================="
-    echo -e "${GREEN}更新完成！${NC}"
+    echo -e "${GREEN}鏇存柊瀹屾垚锛?{NC}"
     echo "=========================================="
     echo ""
-    echo "📋 查看状态: systemctl status ${SERVICE_NAME}"
-    echo "📋 查看日志: journalctl -u ${SERVICE_NAME} -f"
+    echo "馃搵 鏌ョ湅鐘舵€? systemctl status ${SERVICE_NAME}"
+    echo "馃搵 鏌ョ湅鏃ュ織: journalctl -u ${SERVICE_NAME} -f"
     echo ""
 }
 
