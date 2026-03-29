@@ -31,22 +31,6 @@ GITHUB_REPO_OWNER="mrleehj"
 GITHUB_REPO_NAME="CFTunnel"
 RELEASE_VERSION=${RELEASE_VERSION:-latest}  # 可以指定版本,默认使用最新版
 
-# 如果使用 latest，需要获取真实的版本号
-if [ "$RELEASE_VERSION" = "latest" ]; then
-    print_info "获取最新版本号..."
-    # 尝试从 GitHub API 获取最新版本
-    LATEST_VERSION=$(curl -fsSL "https://api.github.com/repos/${GITHUB_REPO_OWNER}/${GITHUB_REPO_NAME}/releases/latest" | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/' 2>/dev/null)
-    
-    if [ -n "$LATEST_VERSION" ]; then
-        RELEASE_VERSION="$LATEST_VERSION"
-        print_success "最新版本: $RELEASE_VERSION"
-    else
-        # 如果 API 失败，使用固定版本
-        RELEASE_VERSION="v1.0.0"
-        print_warning "无法获取最新版本，使用默认版本: $RELEASE_VERSION"
-    fi
-fi
-
 # GitHub Release 下载地址（多个镜像）
 GITHUB_RELEASE_MIRRORS=(
     "https://github.com/${GITHUB_REPO_OWNER}/${GITHUB_REPO_NAME}/releases/download"
@@ -125,6 +109,22 @@ test_download_url() {
 # 下载安装包
 download_package() {
     print_info "准备下载安装包..."
+    
+    # 如果使用 latest，需要获取真实的版本号
+    if [ "$RELEASE_VERSION" = "latest" ]; then
+        print_info "获取最新版本号..."
+        # 尝试从 GitHub API 获取最新版本
+        LATEST_VERSION=$(curl -fsSL "https://api.github.com/repos/${GITHUB_REPO_OWNER}/${GITHUB_REPO_NAME}/releases/latest" | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/' 2>/dev/null)
+        
+        if [ -n "$LATEST_VERSION" ]; then
+            RELEASE_VERSION="$LATEST_VERSION"
+            print_success "最新版本: $RELEASE_VERSION"
+        else
+            # 如果 API 失败，使用固定版本
+            RELEASE_VERSION="v1.0.0"
+            print_warning "无法获取最新版本，使用默认版本: $RELEASE_VERSION"
+        fi
+    fi
     
     TEMP_DIR=$(mktemp -d)
     cd "$TEMP_DIR"
