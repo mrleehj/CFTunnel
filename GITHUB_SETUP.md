@@ -10,28 +10,17 @@
 
 ```bash
 # GitHub 配置（如果需要从 GitHub 克隆）
-GITHUB_REPO="https://github.com/YOUR_USERNAME/YOUR_REPO.git"
-GITHUB_BRANCH="main"
-```
-
-将 `YOUR_USERNAME` 和 `YOUR_REPO` 替换为你的实际 GitHub 用户名和仓库名。
-
-例如：
-```bash
-GITHUB_REPO="https://github.com/zhangsan/cf-tunnel-manager.git"
+GITHUB_REPO="https://github.com/mrleehj/CFTunnel.git"
 GITHUB_BRANCH="main"
 ```
 
 ### 2. 更新 README.md
 
-在 `README.md` 中搜索并替换所有 `YOUR_USERNAME/YOUR_REPO`：
+在 `README.md` 中的安装命令已更新为：
 
 ```markdown
-# 修改前
-curl -fsSL https://raw.githubusercontent.com/YOUR_USERNAME/YOUR_REPO/main/install.sh | sudo bash
-
-# 修改后
-curl -fsSL https://raw.githubusercontent.com/zhangsan/cf-tunnel-manager/main/install.sh | sudo bash
+# 一键安装
+curl -fsSL https://raw.githubusercontent.com/mrleehj/CFTunnel/main/install.sh | sudo bash
 ```
 
 ### 3. 构建前端
@@ -75,7 +64,7 @@ cd cf-linux
 git init
 
 # 添加远程仓库
-git remote add origin https://github.com/YOUR_USERNAME/YOUR_REPO.git
+git remote add origin https://github.com/mrleehj/CFTunnel.git
 
 # 添加所有文件
 git add .
@@ -103,10 +92,10 @@ git push -u origin main
 
 ```bash
 # 使用 curl
-curl -fsSL https://raw.githubusercontent.com/YOUR_USERNAME/YOUR_REPO/main/install.sh | sudo bash
+curl -fsSL https://raw.githubusercontent.com/mrleehj/CFTunnel/main/install.sh | sudo bash
 
 # 或使用 wget
-wget -qO- https://raw.githubusercontent.com/YOUR_USERNAME/YOUR_REPO/main/install.sh | sudo bash
+wget -qO- https://raw.githubusercontent.com/mrleehj/CFTunnel/main/install.sh | sudo bash
 ```
 
 ### 预期结果
@@ -134,14 +123,14 @@ wget -qO- https://raw.githubusercontent.com/YOUR_USERNAME/YOUR_REPO/main/install
 ### 从 GitHub 一键安装
 
 \`\`\`bash
-curl -fsSL https://raw.githubusercontent.com/zhangsan/cf-tunnel-manager/main/install.sh | sudo bash
+curl -fsSL https://raw.githubusercontent.com/mrleehj/CFTunnel/main/install.sh | sudo bash
 \`\`\`
 
 ### 克隆后安装
 
 \`\`\`bash
-git clone https://github.com/zhangsan/cf-tunnel-manager.git
-cd cf-tunnel-manager
+git clone https://github.com/mrleehj/CFTunnel.git
+cd CFTunnel
 sudo bash install.sh
 \`\`\`
 
@@ -168,7 +157,7 @@ GITHUB_BRANCH="develop"
 
 用户安装时：
 ```bash
-curl -fsSL https://raw.githubusercontent.com/YOUR_USERNAME/YOUR_REPO/develop/install.sh | sudo bash
+curl -fsSL https://raw.githubusercontent.com/mrleehj/CFTunnel/develop/install.sh | sudo bash
 ```
 
 ### 使用版本标签
@@ -183,7 +172,7 @@ git push origin v1.0.0
 用户可以安装特定版本：
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/YOUR_USERNAME/YOUR_REPO/v1.0.0/install.sh | sudo bash
+curl -fsSL https://raw.githubusercontent.com/mrleehj/CFTunnel/v1.0.0/install.sh | sudo bash
 ```
 
 ### 私有仓库
@@ -192,18 +181,18 @@ curl -fsSL https://raw.githubusercontent.com/YOUR_USERNAME/YOUR_REPO/v1.0.0/inst
 
 ```bash
 # 方式 1：使用 Personal Access Token
-git clone https://YOUR_TOKEN@github.com/YOUR_USERNAME/YOUR_REPO.git
+git clone https://YOUR_TOKEN@github.com/mrleehj/CFTunnel.git
 
 # 方式 2：使用 SSH
-git clone git@github.com:YOUR_USERNAME/YOUR_REPO.git
+git clone git@github.com:mrleehj/CFTunnel.git
 ```
 
 ## 📊 发布检查清单
 
 发布前确认：
 
-- [ ] 已修改 `install.sh` 中的 GitHub 仓库地址
-- [ ] 已更新 `README.md` 中的所有仓库地址
+- [x] 已修改 `install.sh` 中的 GitHub 仓库地址
+- [x] 已更新 `README.md` 中的所有仓库地址
 - [ ] 已在本地构建前端（`npm run build`）
 - [ ] `dist/` 目录已提交到 Git
 - [ ] 已创建 GitHub 仓库
@@ -214,6 +203,11 @@ git clone git@github.com:YOUR_USERNAME/YOUR_REPO.git
 - [ ] 已添加项目描述和标签（可选）
 
 ## 🎯 推荐的 GitHub 仓库设置
+
+### 仓库地址
+```
+https://github.com/mrleehj/CFTunnel
+```
 
 ### 仓库描述
 ```
@@ -230,9 +224,9 @@ cloudflare, tunnel, cloudflared, web-ui, nodejs, react, linux
 在 README.md 顶部添加：
 
 ```markdown
-![License](https://img.shields.io/github/license/YOUR_USERNAME/YOUR_REPO)
-![Stars](https://img.shields.io/github/stars/YOUR_USERNAME/YOUR_REPO)
-![Issues](https://img.shields.io/github/issues/YOUR_USERNAME/YOUR_REPO)
+![License](https://img.shields.io/github/license/mrleehj/CFTunnel)
+![Stars](https://img.shields.io/github/stars/mrleehj/CFTunnel)
+![Issues](https://img.shields.io/github/issues/mrleehj/CFTunnel)
 ```
 
 ## 🆘 常见问题
@@ -303,7 +297,7 @@ EOF
 按照以上步骤完成后，你的项目就可以通过一条命令安装了：
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/YOUR_USERNAME/YOUR_REPO/main/install.sh | sudo bash
+curl -fsSL https://raw.githubusercontent.com/mrleehj/CFTunnel/main/install.sh | sudo bash
 ```
 
 祝你的项目成功！🎉

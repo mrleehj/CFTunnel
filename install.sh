@@ -5,11 +5,11 @@
 # 
 # 使用方法:
 # 1. 从 GitHub 直接安装:
-#    curl -fsSL https://raw.githubusercontent.com/YOUR_USERNAME/YOUR_REPO/main/install.sh | sudo bash
+#    curl -fsSL https://raw.githubusercontent.com/mrleehj/CFTunnel/main/install.sh | sudo bash
 # 
 # 2. 克隆后安装:
-#    git clone https://github.com/YOUR_USERNAME/YOUR_REPO.git
-#    cd YOUR_REPO
+#    git clone https://github.com/mrleehj/CFTunnel.git
+#    cd CFTunnel
 #    sudo bash install.sh
 
 set -e
@@ -27,7 +27,7 @@ SERVICE_NAME="cf-tunnel-manager"
 PORT=3000
 
 # GitHub 配置（如果需要从 GitHub 克隆）
-GITHUB_REPO="https://github.com/YOUR_USERNAME/YOUR_REPO.git"
+GITHUB_REPO="https://github.com/mrleehj/CFTunnel.git"
 GITHUB_BRANCH="main"
 
 # 打印带颜色的消息

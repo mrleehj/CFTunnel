@@ -87,20 +87,18 @@ cf-linux/
 
 ```bash
 # 使用 curl
-curl -fsSL https://raw.githubusercontent.com/YOUR_USERNAME/YOUR_REPO/main/install.sh | sudo bash
+curl -fsSL https://raw.githubusercontent.com/mrleehj/CFTunnel/main/install.sh | sudo bash
 
 # 或使用 wget
-wget -qO- https://raw.githubusercontent.com/YOUR_USERNAME/YOUR_REPO/main/install.sh | sudo bash
+wget -qO- https://raw.githubusercontent.com/mrleehj/CFTunnel/main/install.sh | sudo bash
 ```
-
-**注意**: 请将 `YOUR_USERNAME/YOUR_REPO` 替换为你的 GitHub 用户名和仓库名。
 
 ### 方式 2：克隆后安装
 
 ```bash
 # 克隆仓库
-git clone https://github.com/YOUR_USERNAME/YOUR_REPO.git
-cd YOUR_REPO
+git clone https://github.com/mrleehj/CFTunnel.git
+cd CFTunnel
 
 # 运行安装脚本
 sudo bash install.sh
