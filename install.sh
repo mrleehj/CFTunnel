@@ -89,23 +89,135 @@ detect_os() {
     print_info "检测到操作系统: $OS $VERSION"
 }
 
-# 检查并安装 git
-install_git() {
-    if ! command -v git &> /dev/null; then
-        print_info "安装 git..."
+# 测试下载地址连接速度
+test_download_url() {
+    local url=$1
+    local timeout=5
+    
+    # 使用 curl 测试 HEAD 请求
+    if timeout $timeout curl -fsSL -I "$url" &>/dev/null; then
+        return 0
+    else
+        return 1
+    fi
+}
+
+# 下载安装包
+download_package() {
+    print_info "准备下载安装包..."
+    
+    TEMP_DIR=$(mktemp -d)
+    cd "$TEMP_DIR"
+    
+    # 选择下载源
+    DOWNLOAD_URL=""
+    
+    if [ "$USE_GITEE" = "yes" ]; then
+        # 强制使用 Gitee
+        DOWNLOAD_URL="${GITEE_RELEASE_URL}/${RELEASE_VERSION}/${PACKAGE_NAME}"
+        print_info "使用 Gitee Release 源"
+    elif [ "$USE_GITEE" = "no" ]; then
+        # 强制使用 GitHub（智能选择最快镜像）
+        print_info "测试 GitHub Release 镜像..."
         
-        if [ "$OS" = "ubuntu" ] || [ "$OS" = "debian" ]; then
-            apt-get update
-            apt-get install -y git
-        elif [ "$OS" = "centos" ] || [ "$OS" = "rhel" ]; then
-            yum install -y git
-        else
-            print_error "无法自动安装 git，请手动安装"
+        for mirror in "${GITHUB_RELEASE_MIRRORS[@]}"; do
+            test_url="${mirror}/${RELEASE_VERSION}/${PACKAGE_NAME}"
+            print_info "测试: $mirror"
+            if test_download_url "$test_url"; then
+                DOWNLOAD_URL="$test_url"
+                print_success "选择镜像: $mirror"
+                break
+            else
+                print_warning "镜像不可用: $mirror"
+            fi
+        done
+        
+        if [ -z "$DOWNLOAD_URL" ]; then
+            print_error "所有 GitHub Release 镜像均不可用"
+            print_info "建议尝试: USE_GITEE=yes bash install.sh"
+            rm -rf "$TEMP_DIR"
             exit 1
         fi
+    else
+        # 自动选择：优先 Gitee，失败则尝试 GitHub 镜像
+        print_info "自动选择下载源..."
         
-        print_success "git 安装完成"
+        # 测试 Gitee Release
+        gitee_url="${GITEE_RELEASE_URL}/${RELEASE_VERSION}/${PACKAGE_NAME}"
+        print_info "测试 Gitee Release..."
+        if test_download_url "$gitee_url"; then
+            DOWNLOAD_URL="$gitee_url"
+            print_success "使用 Gitee Release 源（国内推荐）"
+        else
+            print_warning "Gitee Release 不可用，尝试 GitHub 镜像..."
+            
+            # 测试所有 GitHub 镜像
+            for mirror in "${GITHUB_RELEASE_MIRRORS[@]}"; do
+                test_url="${mirror}/${RELEASE_VERSION}/${PACKAGE_NAME}"
+                print_info "测试: $mirror"
+                if test_download_url "$test_url"; then
+                    DOWNLOAD_URL="$test_url"
+                    print_success "选择镜像: $mirror"
+                    break
+                else
+                    print_warning "镜像不可用: $mirror"
+                fi
+            done
+            
+            if [ -z "$DOWNLOAD_URL" ]; then
+                print_error "所有下载源均不可用"
+                print_info "可能的原因:"
+                print_info "1. 网络连接问题"
+                print_info "2. Release 版本不存在"
+                print_info "3. 请访问 https://github.com/${GITHUB_REPO_OWNER}/${GITHUB_REPO_NAME}/releases 检查"
+                rm -rf "$TEMP_DIR"
+                exit 1
+            fi
+        fi
     fi
+    
+    print_info "下载地址: $DOWNLOAD_URL"
+    print_info "开始下载安装包..."
+    
+    # 下载安装包
+    if curl -fsSL -o "$PACKAGE_NAME" "$DOWNLOAD_URL"; then
+        print_success "安装包下载完成"
+    else
+        print_error "下载失败"
+        print_info "请检查网络连接或手动下载安装包"
+        rm -rf "$TEMP_DIR"
+        exit 1
+    fi
+    
+    # 解压安装包
+    print_info "解压安装包..."
+    mkdir -p cf-tunnel-manager
+    tar -xzf "$PACKAGE_NAME" -C cf-tunnel-manager
+    
+    if [ $? -ne 0 ]; then
+        print_error "解压失败"
+        rm -rf "$TEMP_DIR"
+        exit 1
+    fi
+    
+    PROJECT_DIR="$TEMP_DIR/cf-tunnel-manager"
+    print_success "安装包解压完成"
+}
+
+# 检查项目文件或下载安装包
+check_or_download_package() {
+    SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+    
+    # 检查是否在项目目录中（本地安装）
+    if [ -f "$SCRIPT_DIR/package.json" ] && [ -d "$SCRIPT_DIR/server" ] && [ -d "$SCRIPT_DIR/dist" ]; then
+        print_info "检测到完整项目文件，使用本地文件安装"
+        PROJECT_DIR="$SCRIPT_DIR"
+        return 0
+    fi
+    
+    # 如果不在项目目录，下载安装包
+    print_info "未检测到项目文件，从 Release 下载安装包..."
+    download_package
 }
 
 # 测试镜像源连接速度
@@ -119,112 +231,6 @@ test_mirror_speed() {
     else
         return 1
     fi
-}
-
-# 检查项目文件并从 GitHub/Gitee 克隆（如果需要）
-check_and_clone_project() {
-    SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-    
-    # 检查是否在项目目录中
-    if [ -f "$SCRIPT_DIR/package.json" ] && [ -d "$SCRIPT_DIR/server" ]; then
-        print_info "检测到项目文件，使用本地文件安装"
-        PROJECT_DIR="$SCRIPT_DIR"
-        return 0
-    fi
-    
-    # 如果不在项目目录，从 GitHub/Gitee 克隆
-    print_info "未检测到项目文件，准备克隆项目..."
-    
-    install_git
-    
-    TEMP_DIR=$(mktemp -d)
-    cd "$TEMP_DIR"
-    
-    # 选择克隆源
-    CLONE_REPO=""
-    CLONE_BRANCH=""
-    
-    if [ "$USE_GITEE" = "yes" ]; then
-        # 强制使用 Gitee
-        CLONE_REPO="$GITEE_REPO"
-        CLONE_BRANCH="$GITEE_BRANCH"
-        print_info "使用 Gitee 镜像源"
-    elif [ "$USE_GITEE" = "no" ]; then
-        # 强制使用 GitHub（智能选择最快镜像）
-        print_info "测试 GitHub 镜像源连接速度..."
-        
-        for mirror in "${GITHUB_MIRRORS[@]}"; do
-            print_info "测试: $mirror"
-            if test_mirror_speed "$mirror"; then
-                CLONE_REPO="$mirror"
-                CLONE_BRANCH="$GITHUB_BRANCH"
-                print_success "选择镜像: $mirror"
-                break
-            else
-                print_warning "镜像不可用: $mirror"
-            fi
-        done
-        
-        if [ -z "$CLONE_REPO" ]; then
-            print_error "所有 GitHub 镜像源均不可用"
-            print_info "建议尝试: USE_GITEE=yes bash install.sh"
-            rm -rf "$TEMP_DIR"
-            exit 1
-        fi
-    else
-        # 自动选择：优先 Gitee，失败则尝试 GitHub 镜像
-        print_info "自动选择克隆源..."
-        
-        # 测试 Gitee 连接
-        print_info "测试 Gitee 连接..."
-        if test_mirror_speed "$GITEE_REPO"; then
-            CLONE_REPO="$GITEE_REPO"
-            CLONE_BRANCH="$GITEE_BRANCH"
-            print_success "使用 Gitee 镜像源（国内推荐）"
-        else
-            print_warning "Gitee 不可用，尝试 GitHub 镜像..."
-            
-            # 测试所有 GitHub 镜像
-            for mirror in "${GITHUB_MIRRORS[@]}"; do
-                print_info "测试: $mirror"
-                if test_mirror_speed "$mirror"; then
-                    CLONE_REPO="$mirror"
-                    CLONE_BRANCH="$GITHUB_BRANCH"
-                    print_success "选择镜像: $mirror"
-                    break
-                else
-                    print_warning "镜像不可用: $mirror"
-                fi
-            done
-            
-            if [ -z "$CLONE_REPO" ]; then
-                print_error "所有镜像源均不可用，请检查网络连接"
-                print_info "或手动克隆后再运行安装脚本:"
-                print_info "  git clone https://github.com/mrleehj/CFTunnel.git"
-                print_info "  cd CFTunnel"
-                print_info "  sudo bash install.sh"
-                rm -rf "$TEMP_DIR"
-                exit 1
-            fi
-        fi
-    fi
-    
-    print_info "克隆仓库: $CLONE_REPO"
-    git clone --depth 1 -b "$CLONE_BRANCH" "$CLONE_REPO" cf-tunnel-manager
-    
-    if [ $? -ne 0 ]; then
-        print_error "克隆失败，请检查:"
-        print_info "1. 网络连接是否正常"
-        print_info "2. 仓库地址是否正确"
-        print_info "3. 尝试其他安装方式:"
-        print_info "   - 使用 Gitee: USE_GITEE=yes bash install.sh"
-        print_info "   - 手动克隆后安装"
-        rm -rf "$TEMP_DIR"
-        exit 1
-    fi
-    
-    PROJECT_DIR="$TEMP_DIR/cf-tunnel-manager"
-    print_success "项目克隆完成"
 }
 
 # 安装 Node.js
