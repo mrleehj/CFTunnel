@@ -34,8 +34,9 @@ RELEASE_VERSION=${RELEASE_VERSION:-latest}  # 可以指定版本,默认使用最
 # GitHub Release 下载地址（多个镜像）
 GITHUB_RELEASE_MIRRORS=(
     "https://github.com/${GITHUB_REPO_OWNER}/${GITHUB_REPO_NAME}/releases/download"
-    "https://kkgithub.com/${GITHUB_REPO_OWNER}/${GITHUB_REPO_NAME}/releases/download"
-    "https://hub.bgithub.xyz/${GITHUB_REPO_OWNER}/${GITHUB_REPO_NAME}/releases/download"
+    "https://ghfast.top/https://github.com/${GITHUB_REPO_OWNER}/${GITHUB_REPO_NAME}/releases/download"
+    "https://gh-proxy.org/https://github.com/${GITHUB_REPO_OWNER}/${GITHUB_REPO_NAME}/releases/download"
+    "https://hk.gh-proxy.org/https://github.com/${GITHUB_REPO_OWNER}/${GITHUB_REPO_NAME}/releases/download"
 )
 
 # Gitee Release 配置（国内镜像）
@@ -260,10 +261,26 @@ install_nodejs() {
         print_info "安装 Node.js 18.x..."
         
         if [ "$OS" = "ubuntu" ] || [ "$OS" = "debian" ]; then
-            curl -fsSL https://deb.nodesource.com/setup_18.x | bash -
+            # 尝试使用国内镜像加速
+            if curl -fsSL https://mirrors.tuna.tsinghua.edu.cn/nodesource/deb_18.x/setup | bash - 2>/dev/null; then
+                print_info "使用清华镜像源"
+            elif curl -fsSL https://deb.nodesource.com/setup_18.x | bash - 2>/dev/null; then
+                print_info "使用官方源"
+            else
+                print_error "Node.js 安装源连接失败"
+                exit 1
+            fi
             apt-get install -y nodejs
         elif [ "$OS" = "centos" ] || [ "$OS" = "rhel" ]; then
-            curl -fsSL https://rpm.nodesource.com/setup_18.x | bash -
+            # 尝试使用国内镜像加速
+            if curl -fsSL https://mirrors.tuna.tsinghua.edu.cn/nodesource/rpm_18.x/setup | bash - 2>/dev/null; then
+                print_info "使用清华镜像源"
+            elif curl -fsSL https://rpm.nodesource.com/setup_18.x | bash - 2>/dev/null; then
+                print_info "使用官方源"
+            else
+                print_error "Node.js 安装源连接失败"
+                exit 1
+            fi
             yum install -y nodejs
         else
             print_error "不支持的操作系统: $OS"
