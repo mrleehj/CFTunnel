@@ -91,6 +91,13 @@ curl -fsSL https://raw.githubusercontent.com/mrleehj/CFTunnel/main/install.sh | 
 
 # 或使用 wget
 wget -qO- https://raw.githubusercontent.com/mrleehj/CFTunnel/main/install.sh | sudo bash
+
+# 使用加速代理（推荐，国内服务器）
+curl -fsSL https://ghfast.top/https://raw.githubusercontent.com/mrleehj/CFTunnel/main/install.sh | sudo bash
+
+# 或使用其他加速代理
+curl -fsSL https://gh-proxy.org/https://raw.githubusercontent.com/mrleehj/CFTunnel/main/install.sh | sudo bash
+curl -fsSL https://hk.gh-proxy.org/https://raw.githubusercontent.com/mrleehj/CFTunnel/main/install.sh | sudo bash
 ```
 
 **说明**: 
@@ -105,6 +112,11 @@ wget -qO- https://raw.githubusercontent.com/mrleehj/CFTunnel/main/install.sh | s
 ```bash
 # 使用 Gitee（推荐）
 curl -fsSL https://gitee.com/mrleehj/CFTunnel/raw/main/install.sh | sudo bash
+
+# 使用加速代理
+curl -fsSL https://ghfast.top/https://raw.githubusercontent.com/mrleehj/CFTunnel/main/install.sh | sudo bash
+curl -fsSL https://gh-proxy.org/https://raw.githubusercontent.com/mrleehj/CFTunnel/main/install.sh | sudo bash
+curl -fsSL https://hk.gh-proxy.org/https://raw.githubusercontent.com/mrleehj/CFTunnel/main/install.sh | sudo bash
 
 # 强制使用 Gitee Release
 curl -fsSL https://gitee.com/mrleehj/CFTunnel/raw/main/install.sh | sudo USE_GITEE=yes bash

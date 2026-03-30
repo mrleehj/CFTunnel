@@ -20,6 +20,11 @@
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/mrleehj/CFTunnel/main/install.sh | sudo bash
+
+# 使用加速代理（国内服务器推荐）
+curl -fsSL https://ghfast.top/https://raw.githubusercontent.com/mrleehj/CFTunnel/main/install.sh | sudo bash
+curl -fsSL https://gh-proxy.org/https://raw.githubusercontent.com/mrleehj/CFTunnel/main/install.sh | sudo bash
+curl -fsSL https://hk.gh-proxy.org/https://raw.githubusercontent.com/mrleehj/CFTunnel/main/install.sh | sudo bash
 ```
 
 **分解说明：**

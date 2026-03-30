@@ -21,6 +21,11 @@ GITHUB_BRANCH="main"
 ```markdown
 # 一键安装
 curl -fsSL https://raw.githubusercontent.com/mrleehj/CFTunnel/main/install.sh | sudo bash
+
+# 使用加速代理（国内服务器推荐）
+curl -fsSL https://ghfast.top/https://raw.githubusercontent.com/mrleehj/CFTunnel/main/install.sh | sudo bash
+curl -fsSL https://gh-proxy.org/https://raw.githubusercontent.com/mrleehj/CFTunnel/main/install.sh | sudo bash
+curl -fsSL https://hk.gh-proxy.org/https://raw.githubusercontent.com/mrleehj/CFTunnel/main/install.sh | sudo bash
 ```
 
 ### 3. 构建前端
@@ -96,6 +101,11 @@ curl -fsSL https://raw.githubusercontent.com/mrleehj/CFTunnel/main/install.sh | 
 
 # 或使用 wget
 wget -qO- https://raw.githubusercontent.com/mrleehj/CFTunnel/main/install.sh | sudo bash
+
+# 使用加速代理（国内服务器推荐）
+curl -fsSL https://ghfast.top/https://raw.githubusercontent.com/mrleehj/CFTunnel/main/install.sh | sudo bash
+curl -fsSL https://gh-proxy.org/https://raw.githubusercontent.com/mrleehj/CFTunnel/main/install.sh | sudo bash
+curl -fsSL https://hk.gh-proxy.org/https://raw.githubusercontent.com/mrleehj/CFTunnel/main/install.sh | sudo bash
 ```
 
 ### 预期结果
@@ -297,7 +307,13 @@ EOF
 按照以上步骤完成后，你的项目就可以通过一条命令安装了：
 
 ```bash
+# 标准安装
 curl -fsSL https://raw.githubusercontent.com/mrleehj/CFTunnel/main/install.sh | sudo bash
+
+# 使用加速代理（国内服务器推荐）
+curl -fsSL https://ghfast.top/https://raw.githubusercontent.com/mrleehj/CFTunnel/main/install.sh | sudo bash
+curl -fsSL https://gh-proxy.org/https://raw.githubusercontent.com/mrleehj/CFTunnel/main/install.sh | sudo bash
+curl -fsSL https://hk.gh-proxy.org/https://raw.githubusercontent.com/mrleehj/CFTunnel/main/install.sh | sudo bash
 ```
 
 祝你的项目成功！🎉

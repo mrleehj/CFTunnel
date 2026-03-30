@@ -93,6 +93,11 @@ gh release create v1.0.0 \
 # 测试 GitHub 安装
 curl -fsSL https://raw.githubusercontent.com/mrleehj/CFTunnel/main/install.sh | sudo bash
 
+# 测试加速代理安装
+curl -fsSL https://ghfast.top/https://raw.githubusercontent.com/mrleehj/CFTunnel/main/install.sh | sudo bash
+curl -fsSL https://gh-proxy.org/https://raw.githubusercontent.com/mrleehj/CFTunnel/main/install.sh | sudo bash
+curl -fsSL https://hk.gh-proxy.org/https://raw.githubusercontent.com/mrleehj/CFTunnel/main/install.sh | sudo bash
+
 # 测试 Gitee 安装
 curl -fsSL https://gitee.com/mrleehj/CFTunnel/raw/main/install.sh | sudo bash
 ```

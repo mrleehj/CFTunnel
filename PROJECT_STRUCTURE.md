@@ -97,6 +97,11 @@ public/
 
 ### 安装部署脚本
 - `install.sh` - 一键安装脚本（Linux）
+  - 支持标准安装：`curl -fsSL https://raw.githubusercontent.com/mrleehj/CFTunnel/main/install.sh | sudo bash`
+  - 支持加速代理：
+    - `curl -fsSL https://ghfast.top/https://raw.githubusercontent.com/mrleehj/CFTunnel/main/install.sh | sudo bash`
+    - `curl -fsSL https://gh-proxy.org/https://raw.githubusercontent.com/mrleehj/CFTunnel/main/install.sh | sudo bash`
+    - `curl -fsSL https://hk.gh-proxy.org/https://raw.githubusercontent.com/mrleehj/CFTunnel/main/install.sh | sudo bash`
 - `update.sh` - 更新脚本
 - `uninstall.sh` - 卸载脚本
 - `quick-deploy.sh` - 快速部署脚本

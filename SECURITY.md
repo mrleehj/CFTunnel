@@ -185,3 +185,24 @@ npm update
 ## 报告安全问题
 
 如果发现安全漏洞，请通过 GitHub Issues 报告。
+
+
+## 一键安装
+
+如果还未安装，可以使用以下命令快速安装：
+
+```bash
+# 标准安装
+curl -fsSL https://raw.githubusercontent.com/mrleehj/CFTunnel/main/install.sh | sudo bash
+
+# 使用加速代理（国内服务器推荐）
+curl -fsSL https://ghfast.top/https://raw.githubusercontent.com/mrleehj/CFTunnel/main/install.sh | sudo bash
+curl -fsSL https://gh-proxy.org/https://raw.githubusercontent.com/mrleehj/CFTunnel/main/install.sh | sudo bash
+curl -fsSL https://hk.gh-proxy.org/https://raw.githubusercontent.com/mrleehj/CFTunnel/main/install.sh | sudo bash
+```
+
+## 相关文档
+
+- [README.md](./README.md) - 项目说明
+- [INSTALL.md](./INSTALL.md) - 安装指南
+- [DEPLOY.md](./DEPLOY.md) - 部署指南

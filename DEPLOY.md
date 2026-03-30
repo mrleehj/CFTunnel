@@ -107,7 +107,26 @@ bash quick-deploy.sh ubuntu@example.com
 
 ---
 
-## 方式 3：Git 仓库部署
+## 方式 3：一键安装脚本
+
+使用一键安装脚本快速部署（适合直接在服务器上安装）：
+
+```bash
+# 标准安装
+curl -fsSL https://raw.githubusercontent.com/mrleehj/CFTunnel/main/install.sh | sudo bash
+
+# 使用加速代理（国内服务器推荐）
+curl -fsSL https://ghfast.top/https://raw.githubusercontent.com/mrleehj/CFTunnel/main/install.sh | sudo bash
+curl -fsSL https://gh-proxy.org/https://raw.githubusercontent.com/mrleehj/CFTunnel/main/install.sh | sudo bash
+curl -fsSL https://hk.gh-proxy.org/https://raw.githubusercontent.com/mrleehj/CFTunnel/main/install.sh | sudo bash
+
+# 使用 Gitee 镜像
+curl -fsSL https://gitee.com/mrleehj/CFTunnel/raw/main/install.sh | sudo bash
+```
+
+---
+
+## 方式 4：Git 仓库部署
 
 适合生产环境和团队协作。
 
