@@ -6,6 +6,7 @@ import TunnelManager from "./render/components/CloudflareTunnel/TunnelManager";
 import Logs from "./render/components/Logs/Logs";
 import Login from "./render/components/Login/Login";
 import UserManagement from "./render/components/UserManagement/UserManagement";
+import VersionInfo from "./render/components/Version/VersionInfo";
 import { Toaster } from "@/components/ui/toaster";
 import { auth } from "./api/client";
 import "./App.css";
@@ -167,6 +168,7 @@ function MainApp() {
             退出登录
           </button>
         </nav>
+        <VersionInfo />
       </div>
       <div className="app-main">
         {activeTab === "home" && <Home setActiveTab={setActiveTab} />}

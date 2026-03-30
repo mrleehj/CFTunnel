@@ -95,18 +95,33 @@ remove_install_dir() {
 # 询问是否删除数据
 remove_data() {
     echo ""
-    print_warning "是否删除用户数据？"
-    print_info "数据目录: ~/.cf_tunnel (包含配置、凭证、日志)"
-    read -p "删除数据？(y/N): " -n 1 -r
+    print_warning "是否删除用户数据和配置？"
+    print_info "包含以下目录："
+    print_info "  - ~/.cloudflare-tunnel-manager (用户账号、配置)"
+    print_info "  - ~/.cf_tunnel (Tunnel 配置、凭证、日志)"
+    echo ""
+    read -p "删除所有数据？(y/N): " -n 1 -r
     echo ""
     
     if [[ $REPLY =~ ^[Yy]$ ]]; then
+        # 删除用户账号配置目录
+        if [ -d "$HOME/.cloudflare-tunnel-manager" ]; then
+            rm -rf "$HOME/.cloudflare-tunnel-manager"
+            print_success "用户配置目录已删除: ~/.cloudflare-tunnel-manager"
+        fi
+        
+        # 删除 Tunnel 数据目录
         if [ -d "$HOME/.cf_tunnel" ]; then
             rm -rf "$HOME/.cf_tunnel"
-            print_success "数据目录已删除"
+            print_success "Tunnel 数据目录已删除: ~/.cf_tunnel"
         fi
+        
+        print_success "所有数据已删除"
     else
         print_info "已保留数据目录"
+        print_info "如需手动删除，请运行："
+        print_info "  rm -rf ~/.cloudflare-tunnel-manager"
+        print_info "  rm -rf ~/.cf_tunnel"
     fi
 }
 

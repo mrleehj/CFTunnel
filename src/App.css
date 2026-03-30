@@ -55,7 +55,7 @@
   border-right: 1px solid hsl(var(--border));
   display: flex;
   flex-direction: column;
-  padding: 20px 0;
+  padding: 20px 0 0;
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
 }
@@ -71,6 +71,8 @@
 .app-nav {
   display: flex;
   flex-direction: column;
+  flex: 1;
+  overflow-y: auto;
 }
 
 .app-nav button {
@@ -130,4 +132,118 @@
   line-height: 1.8;
   margin: 12px 0;
   color: hsl(var(--muted-foreground));
+}
+
+/* 版本信息样式 */
+.version-info-container {
+  padding: 12px 16px;
+  border-top: 1px solid hsl(var(--border));
+  margin-top: auto;
+}
+
+.version-button {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  background: hsl(var(--muted));
+  border: 1px solid hsl(var(--border));
+  border-radius: 6px;
+  color: hsl(var(--muted-foreground));
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: inherit;
+}
+
+.version-button:hover:not(:disabled) {
+  background: hsl(var(--accent) / 0.1);
+  color: hsl(var(--foreground));
+  border-color: hsl(var(--accent) / 0.3);
+}
+
+.version-button.has-update {
+  border-color: hsl(var(--destructive) / 0.5);
+  background: hsl(var(--destructive) / 0.05);
+}
+
+.version-button.has-update:hover:not(:disabled) {
+  border-color: hsl(var(--destructive) / 0.7);
+  background: hsl(var(--destructive) / 0.1);
+}
+
+.version-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.version-content {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+}
+
+.version-label {
+  font-size: 11px;
+  opacity: 0.7;
+}
+
+.version-number-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.version-number {
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.update-badge {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.update-dot {
+  width: 8px;
+  height: 8px;
+  background: hsl(var(--destructive));
+  border-radius: 50%;
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  box-shadow: 0 0 0 0 hsl(var(--destructive) / 0.7);
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.version-icon {
+  opacity: 0.5;
+  transition: all 0.2s;
+  flex-shrink: 0;
+}
+
+.version-button:hover:not(:disabled) .version-icon {
+  opacity: 1;
+}
+
+.version-icon.spinning {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
 }

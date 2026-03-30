@@ -14,10 +14,16 @@ import { createInterface } from 'readline';
 import { execSync } from 'child_process';
 import { initializeDefaultAdmin, getAllUsers, createUser, deleteUser, changePassword } from './server/utils/userManager.js';
 import { validatePassword } from './server/utils/passwordValidator.js';
+import axios from 'axios';
 
 const program = new Command();
 const CONFIG_DIR = path.join(os.homedir(), '.cloudflare-tunnel-manager');
 const USERS_FILE = path.join(CONFIG_DIR, 'users.json');
+const VERSION_FILE = path.join(path.dirname(new URL(import.meta.url).pathname), 'VERSION');
+const PACKAGE_FILE = path.join(path.dirname(new URL(import.meta.url).pathname), 'package.json');
+
+// GitHub 仓库信息
+const GITHUB_REPO = 'mrleehj/CFTunnel';
 
 // 创建 readline 接口
 function createReadline() {
@@ -387,11 +393,240 @@ function viewLogs() {
 }
 
 
+// 获取本地版本
+async function getLocalVersion() {
+  try {
+    if (existsSync(VERSION_FILE)) {
+      const version = await fs.readFile(VERSION_FILE, 'utf-8');
+      return version.trim();
+    }
+    
+    // 如果 VERSION 文件不存在，从 package.json 读取
+    const packageData = JSON.parse(await fs.readFile(PACKAGE_FILE, 'utf-8'));
+    return packageData.version;
+  } catch (error) {
+    return '未知';
+  }
+}
+
+// 从 GitHub 获取最新版本
+async function getLatestVersionFromGitHub() {
+  try {
+    const response = await axios.get(
+      `https://api.github.com/repos/${GITHUB_REPO}/releases/latest`,
+      { timeout: 10000 }
+    );
+    
+    return {
+      version: response.data.tag_name.replace(/^v/, ''),
+      releaseUrl: response.data.html_url,
+      publishedAt: response.data.published_at,
+      body: response.data.body
+    };
+  } catch (error) {
+    throw new Error('GitHub API 请求失败');
+  }
+}
+
+// 获取最新版本
+async function getLatestVersion() {
+  try {
+    return await getLatestVersionFromGitHub();
+  } catch (error) {
+    throw new Error('无法获取最新版本信息');
+  }
+}
+
+// 比较版本号
+function compareVersions(v1, v2) {
+  const parts1 = v1.split('.').map(Number);
+  const parts2 = v2.split('.').map(Number);
+  
+  for (let i = 0; i < Math.max(parts1.length, parts2.length); i++) {
+    const part1 = parts1[i] || 0;
+    const part2 = parts2[i] || 0;
+    
+    if (part1 > part2) return 1;
+    if (part1 < part2) return -1;
+  }
+  
+  return 0;
+}
+
+// 显示版本信息
+async function showVersion() {
+  console.log('\n📦 版本信息\n');
+  
+  try {
+    const version = await getLocalVersion();
+    console.log('当前版本:', version);
+    console.log('安装目录: /opt/cf-tunnel-manager');
+    console.log('');
+  } catch (error) {
+    console.error('✗ 获取版本失败:', error.message);
+  }
+}
+
+// 检查更新
+async function checkUpdate() {
+  console.log('\n🔍 检查更新...\n');
+  
+  try {
+    const localVersion = await getLocalVersion();
+    console.log('当前版本:', localVersion);
+    console.log('');
+    
+    console.log('正在获取最新版本信息...');
+    const latestInfo = await getLatestVersion();
+    
+    console.log('最新版本:', latestInfo.version);
+    console.log('发布时间:', new Date(latestInfo.publishedAt).toLocaleString('zh-CN'));
+    console.log('');
+    
+    const hasUpdate = compareVersions(latestInfo.version, localVersion) > 0;
+    
+    if (hasUpdate) {
+      console.log('🎉 发现新版本！');
+      console.log('');
+      console.log('更新说明:');
+      console.log('─'.repeat(60));
+      console.log(latestInfo.body || '无更新说明');
+      console.log('─'.repeat(60));
+      console.log('');
+      console.log('📥 更新方法:');
+      console.log('');
+      console.log('方法 1: 使用一键更新命令');
+      console.log(`  cftm update`);
+      console.log('');
+      console.log('方法 2: 手动下载更新');
+      console.log(`  wget ${latestInfo.releaseUrl.replace('/tag/', '/download/')}/cf-tunnel-manager-v${latestInfo.version}.tar.gz`);
+      console.log(`  tar -xzf cf-tunnel-manager-v${latestInfo.version}.tar.gz`);
+      console.log('  cd cf-tunnel-manager');
+      console.log('  sudo bash update.sh');
+      console.log('');
+      console.log('详情查看:', latestInfo.releaseUrl);
+      console.log('');
+    } else {
+      console.log('✓ 已是最新版本');
+      console.log('');
+    }
+  } catch (error) {
+    console.error('✗ 检查更新失败:', error.message);
+    console.log('');
+    console.log('💡 提示：');
+    console.log('  - 检查网络连接');
+    console.log('  - 访问 GitHub: https://github.com/mrleehj/CFTunnel/releases');
+    console.log('');
+  }
+}
+
+// 自动更新
+async function autoUpdate() {
+  console.log('\n🚀 自动更新\n');
+  
+  try {
+    const localVersion = await getLocalVersion();
+    console.log('当前版本:', localVersion);
+    console.log('');
+    
+    console.log('正在检查更新...');
+    const latestInfo = await getLatestVersion();
+    
+    const hasUpdate = compareVersions(latestInfo.version, localVersion) > 0;
+    
+    if (!hasUpdate) {
+      console.log('✓ 已是最新版本');
+      console.log('');
+      return;
+    }
+    
+    console.log('发现新版本:', latestInfo.version);
+    console.log('');
+    
+    // 构建下载 URL
+    const downloadUrl = `https://github.com/${GITHUB_REPO}/releases/download/v${latestInfo.version}/cf-tunnel-manager-v${latestInfo.version}.tar.gz`;
+    
+    console.log('下载地址:', downloadUrl);
+    console.log('');
+    
+    const confirm = await ask('是否立即下载并更新？(yes/no): ');
+    
+    if (confirm.toLowerCase() !== 'yes' && confirm.toLowerCase() !== 'y') {
+      console.log('\n✗ 已取消更新\n');
+      return;
+    }
+    
+    console.log('');
+    console.log('开始下载...');
+    
+    const tmpDir = `/tmp/cftm-update-${Date.now()}`;
+    execSync(`mkdir -p ${tmpDir}`);
+    
+    try {
+      execSync(`cd ${tmpDir} && wget -q --show-progress ${downloadUrl}`, { stdio: 'inherit' });
+      console.log('');
+      console.log('解压文件...');
+      execSync(`cd ${tmpDir} && tar -xzf cf-tunnel-manager-v${latestInfo.version}.tar.gz`);
+      
+      console.log('运行更新脚本...');
+      console.log('');
+      execSync(`cd ${tmpDir}/cf-tunnel-manager && bash update.sh`, { stdio: 'inherit' });
+      
+      // 清理临时文件
+      execSync(`rm -rf ${tmpDir}`);
+      
+      console.log('');
+      console.log('✓ 更新完成！');
+      console.log('');
+    } catch (error) {
+      console.error('');
+      console.error('✗ 更新失败');
+      console.log('');
+      console.log('💡 请尝试手动更新：');
+      console.log(`  wget ${downloadUrl}`);
+      console.log(`  tar -xzf cf-tunnel-manager-v${latestInfo.version}.tar.gz`);
+      console.log('  cd cf-tunnel-manager');
+      console.log('  sudo bash update.sh');
+      console.log('');
+      
+      // 清理临时文件
+      try {
+        execSync(`rm -rf ${tmpDir}`);
+      } catch (e) {
+        // 忽略清理错误
+      }
+    }
+  } catch (error) {
+    console.error('✗ 更新失败:', error.message);
+    console.log('');
+  }
+}
+
+
 // 配置 CLI
 program
   .name('cftm')
   .description('CloudFlare Tunnel Manager - 命令行管理工具')
-  .version('1.0.0');
+  .version('1.2.0');
+
+// 版本信息
+program
+  .command('version')
+  .alias('v')
+  .description('显示版本信息')
+  .action(showVersion);
+
+// 检查更新
+program
+  .command('check-update')
+  .description('检查是否有新版本')
+  .action(checkUpdate);
+
+// 自动更新
+program
+  .command('update')
+  .description('自动下载并更新到最新版本')
+  .action(autoUpdate);
 
 // 重置管理员密码
 program
