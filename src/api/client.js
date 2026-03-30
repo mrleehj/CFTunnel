@@ -72,15 +72,101 @@ export const cloudflared = {
     return await request('/cloudflared/version');
   },
 
-  async install() {
-    return await request('/cloudflared/install', { method: 'POST' });
+  /**
+   * 安装 cloudflared（使用 SSE 实时进度）
+   * @param {Function} onProgress - 进度回调函数 (progress: number, message: string)
+   * @param {string} version - 可选的版本号
+   * @returns {Promise<Object>} 安装结果
+   */
+  async install(onProgress = null, version = null) {
+    return new Promise((resolve, reject) => {
+      const token = localStorage.getItem('auth_token');
+      const url = `${API_BASE}/cloudflared/install`;
+      
+      // 使用 fetch 发送 POST 请求
+      fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': token ? `Bearer ${token}` : '',
+        },
+        body: JSON.stringify({ version }),
+      })
+      .then(response => {
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}`);
+        }
+        
+        // 检查是否是 SSE 响应
+        const contentType = response.headers.get('content-type');
+        if (contentType && contentType.includes('text/event-stream')) {
+          // 处理 SSE 流
+          const reader = response.body.getReader();
+          const decoder = new TextDecoder();
+          let buffer = '';
+          
+          const processStream = () => {
+            reader.read().then(({ done, value }) => {
+              if (done) {
+                return;
+              }
+              
+              // 解码数据
+              buffer += decoder.decode(value, { stream: true });
+              
+              // 按行分割
+              const lines = buffer.split('\n');
+              buffer = lines.pop() || ''; // 保留最后一个不完整的行
+              
+              // 处理每一行
+              for (const line of lines) {
+                if (line.startsWith('data: ')) {
+                  try {
+                    const data = JSON.parse(line.substring(6));
+                    
+                    // 处理进度事件
+                    if (data.progress !== undefined && onProgress) {
+                      onProgress(data.progress, data.message);
+                    }
+                    
+                    // 处理错误事件
+                    if (data.error) {
+                      reject(new Error(data.message + (data.details ? '\n\n' + data.details : '')));
+                      return;
+                    }
+                    
+                    // 处理完成事件
+                    if (data.complete) {
+                      resolve(data);
+                      return;
+                    }
+                  } catch (e) {
+                    console.error('解析 SSE 数据失败:', e, line);
+                  }
+                }
+              }
+              
+              // 继续读取
+              processStream();
+            }).catch(error => {
+              reject(error);
+            });
+          };
+          
+          processStream();
+        } else {
+          // 不是 SSE 响应，按普通 JSON 处理
+          response.json().then(resolve).catch(reject);
+        }
+      })
+      .catch(error => {
+        reject(error);
+      });
+    });
   },
 
-  async installVersion(version) {
-    return await request('/cloudflared/install', {
-      method: 'POST',
-      body: JSON.stringify({ version }),
-    });
+  async installVersion(version, onProgress = null) {
+    return await cloudflared.install(onProgress, version);
   },
 
   async uninstall() {

@@ -236,35 +236,37 @@ export default function CloudflareTunnelAdvanced() {
     
     setInstalling(true);
     setInstallProgress(0);
-    const interval = setInterval(() => {
-      setInstallProgress((p) => Math.min(95, p + Math.floor(Math.random() * 8) + 4));
-    }, 400);
+    
     try {
-      let result;
-      if (selectedVersion === "latest") {
-        result = await api.cloudflared.install();
-      } else {
-        result = await api.cloudflared.installVersion(selectedVersion);
-      }
+      // 使用 SSE 实时进度
+      const result = await api.cloudflared.install(
+        (progress, message) => {
+          // 实时更新进度
+          setInstallProgress(progress);
+          console.log(`安装进度: ${progress}% - ${message}`);
+        },
+        selectedVersion === "latest" ? null : selectedVersion
+      );
+      
       setInstallProgress(100);
-      clearInterval(interval);
       
       setTimeout(() => {
         checkCloudflared();
+        setInstallProgress(0); // 重置进度条，让它消失
         toast({
           variant: "success",
           title: "安装成功",
           description: result.message || "安装完成",
         });
-      }, 150);
+      }, 500); // 延长到 500ms，让用户看到 100% 的状态
     } catch (e) {
-      clearInterval(interval);
-      const errorMsg = typeof e === 'string' ? e : e.toString();
+      const errorMsg = typeof e === 'string' ? e : (e.message || e.toString());
       toast({
         variant: "destructive",
         title: "安装失败",
         description: errorMsg,
       });
+      setInstallProgress(0);
     } finally {
       setInstalling(false);
     }
@@ -499,7 +501,7 @@ export default function CloudflareTunnelAdvanced() {
               </div>
             )}
             
-            {installProgress > 0 && (
+            {installProgress > 0 && installing && (
               <div className="space-y-2">
                 <div className="w-full bg-muted rounded-full h-2 overflow-hidden">
                   <div 

@@ -95,6 +95,109 @@ async function downloadWithFallback(versionPath, fileName) {
 }
 
 /**
+ * 从多个源尝试下载文件（带进度回调）
+ * @param {string} versionPath - 版本路径，如 'latest/download' 或 '2024.1.0'
+ * @param {string} fileName - 文件名
+ * @param {Function} onProgress - 进度回调函数 (progress: 0-100, message: string)
+ * @returns {Promise<Buffer>} 下载的文件数据
+ */
+async function downloadWithFallbackProgress(versionPath, fileName, onProgress) {
+  let lastError = null;
+  
+  for (let i = 0; i < DOWNLOAD_SOURCES.length; i++) {
+    const source = DOWNLOAD_SOURCES[i];
+    const url = `${source}${versionPath}/${fileName}`;
+    
+    const sourceMsg = `尝试下载源 ${i + 1}/${DOWNLOAD_SOURCES.length}`;
+    console.log(`[下载源 ${i + 1}/${DOWNLOAD_SOURCES.length}] 尝试: ${source}`);
+    onProgress(0, sourceMsg);
+    
+    try {
+      // 用于控制进度更新频率
+      let lastReportedProgress = -1;
+      
+      // 尝试连接并下载
+      const response = await axios({
+        method: 'get',
+        url: url,
+        responseType: 'arraybuffer',
+        timeout: 120000, // 120 秒超时
+        maxRedirects: 5,
+        headers: {
+          'User-Agent': 'cf-linux-app',
+          'Accept': 'application/octet-stream'
+        },
+        // 添加流式进度回调
+        onDownloadProgress: (progressEvent) => {
+          if (progressEvent.total) {
+            // 已知总大小：计算精确百分比
+            const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+            const loadedMB = (progressEvent.loaded / 1024 / 1024).toFixed(2);
+            const totalMB = (progressEvent.total / 1024 / 1024).toFixed(2);
+            
+            // 只在进度变化至少 5% 或达到 100% 时更新（避免过于频繁）
+            if (percentCompleted !== lastReportedProgress && 
+                (percentCompleted - lastReportedProgress >= 5 || percentCompleted >= 100)) {
+              lastReportedProgress = percentCompleted;
+              const message = `下载中 ${loadedMB}MB / ${totalMB}MB (${percentCompleted}%)`;
+              console.log(`[下载源 ${i + 1}] 进度: ${percentCompleted}% (${loadedMB} MB / ${totalMB} MB)`);
+              onProgress(percentCompleted, message);
+            }
+          } else {
+            // 未知总大小：根据已下载量估算进度
+            const loadedMB = (progressEvent.loaded / 1024 / 1024).toFixed(2);
+            let estimatedProgress = 50; // 默认中间进度
+            
+            // 根据已下载大小估算进度
+            if (progressEvent.loaded < 10 * 1024 * 1024) {
+              estimatedProgress = 10;
+            } else if (progressEvent.loaded < 50 * 1024 * 1024) {
+              estimatedProgress = 50;
+            } else {
+              estimatedProgress = 90;
+            }
+            
+            // 只在进度变化时更新
+            if (estimatedProgress !== lastReportedProgress) {
+              lastReportedProgress = estimatedProgress;
+              const message = `下载中 ${loadedMB}MB`;
+              console.log(`[下载源 ${i + 1}] 进度: ${loadedMB} MB (估算 ${estimatedProgress}%)`);
+              onProgress(estimatedProgress, message);
+            }
+          }
+        }
+      });
+      
+      if (response.status === 200 && response.data) {
+        const sizeMB = (response.data.byteLength / 1024 / 1024).toFixed(2);
+        console.log(`[下载源 ${i + 1}] ✅ 下载成功，文件大小: ${sizeMB} MB`);
+        onProgress(100, `下载完成 (${sizeMB}MB)`);
+        return Buffer.from(response.data);
+      } else {
+        lastError = new Error(`HTTP ${response.status}`);
+        console.log(`[下载源 ${i + 1}] ❌ 失败: HTTP ${response.status}`);
+        onProgress(0, `下载源 ${i + 1} 失败: HTTP ${response.status}`);
+      }
+    } catch (error) {
+      lastError = error;
+      const errorMsg = error.code || error.message;
+      console.log(`[下载源 ${i + 1}] ❌ 失败: ${errorMsg}`);
+      onProgress(0, `下载源 ${i + 1} 失败: ${errorMsg}`);
+      
+      // 如果不是最后一个源，继续尝试下一个
+      if (i < DOWNLOAD_SOURCES.length - 1) {
+        console.log(`[下载源 ${i + 1}] 切换到下一个源...`);
+        onProgress(0, `切换到下载源 ${i + 2}...`);
+        continue;
+      }
+    }
+  }
+  
+  // 所有源都失败了
+  throw new Error(`所有下载源均失败。最后错误: ${lastError?.message || '未知错误'}\n\n建议：\n1. 检查网络连接\n2. 使用代理或 VPN\n3. 手动下载: https://github.com/cloudflare/cloudflared/releases`);
+}
+
+/**
  * GET /api/cloudflared/version
  * 检查 cloudflared 版本
  */
@@ -119,11 +222,45 @@ router.get('/version', async (req, res) => {
 
 /**
  * POST /api/cloudflared/install
- * 安装 cloudflared
+ * 安装 cloudflared（使用 SSE 实时推送进度）
  */
 router.post('/install', async (req, res) => {
-  // 设置请求超时（5 分钟）
-  req.setTimeout(300000);
+  // 设置 SSE 响应头
+  res.setHeader('Content-Type', 'text/event-stream');
+  res.setHeader('Cache-Control', 'no-cache');
+  res.setHeader('Connection', 'keep-alive');
+  res.setHeader('X-Accel-Buffering', 'no'); // 禁用 nginx 缓冲
+  
+  // 发送进度事件的辅助函数
+  const sendProgress = (progress, message, data = {}) => {
+    const event = {
+      progress,
+      message,
+      ...data
+    };
+    res.write(`data: ${JSON.stringify(event)}\n\n`);
+  };
+  
+  // 发送错误事件
+  const sendError = (error, details = '') => {
+    const event = {
+      error: true,
+      message: error,
+      details
+    };
+    res.write(`data: ${JSON.stringify(event)}\n\n`);
+    res.end();
+  };
+  
+  // 发送完成事件
+  const sendComplete = (data) => {
+    const event = {
+      complete: true,
+      ...data
+    };
+    res.write(`data: ${JSON.stringify(event)}\n\n`);
+    res.end();
+  };
   
   try {
     const { version } = req.body;
@@ -134,6 +271,7 @@ router.post('/install', async (req, res) => {
     const platform = os.platform();
     const arch = os.arch();
     
+    sendProgress(5, `开始安装 (平台: ${platform}, 架构: ${arch})`);
     console.log(`开始安装 cloudflared (平台: ${platform}, 架构: ${arch})`);
     
     let fileName;
@@ -145,7 +283,7 @@ router.post('/install', async (req, res) => {
       } else if (arch === 'arm64') {
         fileName = 'cloudflared-linux-arm64';
       } else {
-        return res.status(400).json({ error: '不支持的架构', arch });
+        return sendError('不支持的架构', `架构: ${arch}`);
       }
     } else if (platform === 'darwin') {
       if (arch === 'x64') {
@@ -153,45 +291,58 @@ router.post('/install', async (req, res) => {
       } else if (arch === 'arm64') {
         fileName = 'cloudflared-darwin-amd64.tgz'; // macOS 使用通用二进制
       } else {
-        return res.status(400).json({ error: '不支持的架构', arch });
+        return sendError('不支持的架构', `架构: ${arch}`);
       }
     } else if (platform === 'win32') {
       fileName = 'cloudflared-windows-amd64.exe';
     } else {
-      return res.status(400).json({ error: '不支持的操作系统', platform });
+      return sendError('不支持的操作系统', `平台: ${platform}`);
     }
     
     // 使用指定版本或最新版本
     const versionTag = version || 'latest';
-    const versionPath = versionTag === 'latest' ? 'latest/download' : versionTag;
+    const versionPath = versionTag === 'latest' ? 'latest/download' : `download/${versionTag}`;
     
+    sendProgress(10, `准备下载 ${fileName}`);
     console.log(`目标版本: ${versionTag}, 文件名: ${fileName}`);
     
     // 创建安装目录
     await fs.mkdir(installDir, { recursive: true });
+    sendProgress(15, '创建安装目录');
     console.log(`安装目录: ${installDir}`);
     
-    // 使用多源下载
+    // 使用多源下载（带进度回调）
+    sendProgress(20, '开始下载...');
     console.log('开始多源下载...');
-    const fileBuffer = await downloadWithFallback(versionPath, fileName);
     
+    const fileBuffer = await downloadWithFallbackProgress(versionPath, fileName, (progress, message) => {
+      // 下载进度占 20% - 85%
+      const actualProgress = 20 + Math.floor(progress * 0.65);
+      sendProgress(actualProgress, message);
+    });
+    
+    sendProgress(85, '下载完成，开始写入文件...');
     console.log('下载完成，开始写入文件...');
     
     // 写入临时文件
     const tempPath = cloudflaredPath + '.tmp';
     await fs.writeFile(tempPath, fileBuffer);
+    sendProgress(90, '文件写入完成');
     console.log('临时文件写入完成');
     
     // 移动到最终位置
     await fs.rename(tempPath, cloudflaredPath);
+    sendProgress(92, '文件已安装');
     console.log('文件已移动到:', cloudflaredPath);
     
     // 设置执行权限 (Linux/macOS)
     if (platform !== 'win32') {
       await fs.chmod(cloudflaredPath, 0o755);
+      sendProgress(95, '已设置执行权限');
       console.log('已设置执行权限');
     }
     
+    sendProgress(97, '验证安装...');
     console.log('验证安装...');
     
     // 验证安装（添加超时和错误处理）
@@ -211,8 +362,8 @@ router.post('/install', async (req, res) => {
     
     console.log('安装流程完成');
     
-    // 返回成功响应
-    res.json({ 
+    // 发送完成事件
+    sendComplete({ 
       message: 'cloudflared 安装成功',
       version: installedVersion,
       path: cloudflaredPath,
@@ -243,11 +394,7 @@ router.post('/install', async (req, res) => {
       errorDetails = '无法解析域名';
     }
     
-    res.status(500).json({ 
-      error: '安装失败', 
-      message: errorMessage,
-      details: errorDetails
-    });
+    sendError(errorMessage, errorDetails);
   }
 });
 
