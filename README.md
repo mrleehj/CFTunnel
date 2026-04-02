@@ -81,7 +81,40 @@ cf-linux/
 
 ## 快速开始
 
-### 方式 1：一键安装（推荐）⭐
+### 方式 1：Docker 部署（最简单）🐳
+
+使用 Docker 一键部署，无需安装 Node.js 和依赖：
+
+```bash
+# 拉取镜像（即将发布）
+docker pull cf-tunnel-manager:latest
+
+# 运行容器
+docker run -d \
+  --name cf-tunnel \
+  -p 3000:3000 \
+  -v cf-data:/data \
+  --restart unless-stopped \
+  cf-tunnel-manager:latest
+```
+
+或从源码构建：
+
+```bash
+# 克隆仓库
+git clone https://github.com/mrleehj/CFTunnel.git
+cd CFTunnel/cf-linux
+
+# 构建并运行
+bash docker-build.sh
+bash docker-run.sh
+```
+
+访问 http://localhost:3000
+
+详细说明请查看 [Docker 部署指南](DOCKER.md)
+
+### 方式 2：一键安装（推荐）⭐
 
 从 GitHub Release 下载完整安装包并自动安装:
 

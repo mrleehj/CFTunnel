@@ -1,0 +1,64 @@
+# Node.js
+node_modules
+npm-debug.log
+yarn-error.log
+package-lock.json
+
+# 构建产物（会在构建阶段生成）
+dist
+
+# Git
+.git
+.gitignore
+.gitattributes
+
+# 开发工具
+.vscode
+.idea
+
+# 文档
+*.md
+!README.md
+docs
+.archive
+
+# 测试
+test
+tests
+*.test.js
+*.spec.js
+
+# 环境变量
+.env
+.env.local
+.env.*.local
+
+# 日志
+logs
+*.log
+
+# 临时文件
+tmp
+temp
+*.tmp
+
+# 打包文件
+*.tar.gz
+*.zip
+
+# 部署脚本
+deploy*.sh
+package.sh
+install.sh
+uninstall.sh
+update.sh
+
+# 配置文件
+.npmrc
+.editorconfig
+.prettierrc
+.eslintrc*
+
+# 其他
+.DS_Store
+Thumbs.db
